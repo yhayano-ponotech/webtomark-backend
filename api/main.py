@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import uuid
-from typing import Optional
+from typing import Optional, List
 import os
 
 from models import ConversionRequest, TaskStatus, ConversionResult
@@ -11,6 +11,16 @@ import tasks
 # 環境変数から設定を読み込み
 MAX_CRAWL_DEPTH = int(os.getenv("MAX_CRAWL_DEPTH", "5"))
 
+# CORS用のオリジン設定を環境変数から取得
+# カンマ区切りの文字列から配列に変換（例: "http://localhost:3000,https://example.com"）
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+# ["*"]のままの場合は、すべてのオリジンを許可
+if len(ALLOWED_ORIGINS) == 1 and ALLOWED_ORIGINS[0] == "*":
+    ALLOWED_ORIGINS = ["*"]
+else:
+    # 各URLの前後の空白を削除
+    ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS]
+
 # FastAPIアプリケーションの作成
 app = FastAPI(
     title="MarkItDown API",
@@ -18,10 +28,10 @@ app = FastAPI(
     version="0.1.0"
 )
 
-# CORSミドルウェアの設定（本番環境では適切に制限する）
+# CORSミドルウェアの設定（環境変数から許可オリジンを設定）
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 本番環境では適切なオリジンに制限すべき
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

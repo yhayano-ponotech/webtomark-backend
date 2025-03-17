@@ -1,28 +1,28 @@
-# MarkItDown - ウェブサイトクローラー＆変換アプリケーション（バックエンド）
+# MarkItDown - ウェブサイトクローラー＆変換アプリケーション (バックエンド)
 
 ![FastAPI](https://img.shields.io/badge/FastAPI-latest-009688)
 ![Python](https://img.shields.io/badge/Python-3.10+-blue)
-![MarkItDown](https://img.shields.io/badge/MarkItDown-0.1.0a1-orange)
-![Beautiful Soup](https://img.shields.io/badge/BeautifulSoup-4-green)
+![MarkItDown](https://img.shields.io/badge/MarkItDown-0.1.0-orange)
 
 ## 📖 概要
 
-MarkItDownバックエンドは、ウェブサイトをクローリング・スクレイピングし、Markdown形式に変換するAPIサーバーです。FastAPI（Python）で構築されており、非同期処理によるパフォーマンス最適化が行われています。
+MarkItDownは、ウェブサイトのURLを入力すると、そのサイトをクローリング・スクレイピングし、Markdown形式に変換するWebアプリケーションのバックエンドAPIです。FastAPIで構築されており、非同期処理によって効率的なクローリングと変換を実現しています。
 
 ## ✨ 機能
 
-- ウェブサイトURLのクローリングと構造抽出
-- 指定した深度までの再帰的クローリング
-- MarkItDownライブラリによるMarkdown変換処理
-- 非同期タスク管理と進捗状況の追跡
-- RESTful APIによるフロントエンドとの連携
+- ウェブサイトのURL入力によるクローリング
+- クロール深度と画像取得オプションのカスタマイズ
+- 非同期処理による効率的なデータ取得
+- MarkItDownライブラリを使用したMarkdown変換
+- タスクベースの処理とステータス管理
+- RESTful APIインターフェース
 
 ## 🛠️ 技術スタック
 
 - **FastAPI**: 高速なPythonウェブフレームワーク
 - **Pydantic**: データバリデーション
 - **MarkItDown**: Markdown変換ライブラリ
-- **Beautiful Soup / lxml**: スクレイピングライブラリ
+- **BeautifulSoup/lxml**: スクレイピングライブラリ
 - **HTTPX**: 非同期HTTPクライアント
 - **Uvicorn**: ASGIサーバー
 
@@ -31,7 +31,7 @@ MarkItDownバックエンドは、ウェブサイトをクローリング・ス�
 ### 前提条件
 
 - Python 3.10以上
-- pip（Pythonパッケージマネージャー）
+- pip (Pythonパッケージマネージャー)
 
 ### インストール
 
@@ -42,15 +42,13 @@ git clone https://github.com/your-username/markitdown-backend.git
 cd markitdown-backend
 ```
 
-2. 仮想環境を作成して有効化する:
+2. 仮想環境を作成してアクティベートする:
 
 ```bash
-# Windowsの場合
 python -m venv venv
+# Windowsの場合
 venv\Scripts\activate
-
 # macOS/Linuxの場合
-python3 -m venv venv
 source venv/bin/activate
 ```
 
@@ -60,148 +58,82 @@ source venv/bin/activate
 pip install -r api/requirements.txt
 ```
 
-4. 環境変数の設定（オプション）:
+4. 環境変数の設定:
 
-`.env` ファイルを作成して環境変数を設定します:
+`.env.example` ファイルを `.env` にコピーして適切な値を設定します:
 
+```bash
+cp .env.example .env
 ```
-MAX_CRAWL_DEPTH=5
-```
 
-### 開発サーバーの起動
-
-開発サーバーを起動するには以下のコマンドを実行します:
+5. APIサーバーを起動する:
 
 ```bash
 cd api
 python run_server.py
 ```
 
-サーバーは `http://localhost:8000` で実行されます。Swagger APIドキュメントは `http://localhost:8000/docs` で確認できます。
-
-## 📑 APIエンドポイント
-
-| エンドポイント | メソッド | 説明 |
-|---------------|--------|------|
-| `/` | GET | APIの基本情報 |
-| `/api/convert/` | POST | ウェブサイト変換リクエストの開始 |
-| `/api/tasks/{task_id}/` | GET | タスク状態の確認 |
-| `/api/tasks/{task_id}/result/` | GET | 変換結果の取得 |
-
-### リクエスト例
-
-#### 変換リクエスト
-
-```json
-POST /api/convert/
-{
-  "url": "https://example.com",
-  "options": {
-    "crawl_depth": 2,
-    "include_images": true
-  }
-}
-```
-
-#### レスポンス
-
-```json
-{
-  "taskId": "550e8400-e29b-41d4-a716-446655440000"
-}
-```
-
-#### タスク状態の確認
-
-```
-GET /api/tasks/550e8400-e29b-41d4-a716-446655440000/
-```
-
-#### レスポンス
-
-```json
-{
-  "task_id": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "processing",
-  "progress": 45,
-  "message": "ページをクロール中: https://example.com (深度 1/2)"
-}
-```
-
-#### 結果の取得
-
-```
-GET /api/tasks/550e8400-e29b-41d4-a716-446655440000/result/
-```
+サーバーは http://localhost:8000 で起動し、APIドキュメントは http://localhost:8000/docs で確認できます。
 
 ## 🧩 環境変数
 
 | 変数名 | 説明 | デフォルト値 |
 |--------|------|-------------|
-| `MAX_CRAWL_DEPTH` | 最大クロール深度の制限 | `5` |
+| `MAX_CRAWL_DEPTH` | 最大クロール深度 | `5` |
+| `ALLOWED_ORIGINS` | CORS許可オリジン (カンマ区切り) | `*` |
 
 ## 📁 プロジェクト構造
 
 ```
-/
-├── api/                   # APIアプリケーションフォルダ
-│   ├── __init__.py        # パッケージ初期化
-│   ├── main.py            # FastAPIアプリケーションのメインファイル
-│   ├── converter.py       # Markdown変換ロジック
-│   ├── crawler.py         # ウェブクローリングロジック
-│   ├── models.py          # Pydanticモデル定義
-│   ├── tasks.py           # 非同期タスク管理
-│   ├── requirements.txt   # 依存関係
-│   └── run_server.py      # 開発サーバー起動スクリプト
-└── .env                   # 環境変数（gitignoreに含める）
+/api
+├── __init__.py          # パッケージ初期化
+├── main.py              # FastAPIアプリケーションのメインファイル
+├── models.py            # Pydanticモデル (データ検証)
+├── converter.py         # Markdown変換クラス
+├── crawler.py           # ウェブクローラークラス
+├── tasks.py             # タスク管理システム
+├── requirements.txt     # 依存関係リスト
+└── run_server.py        # 開発サーバー起動スクリプト
 ```
 
-## 📊 パフォーマンスと制限
+## 📡 API エンドポイント
 
-- Vercelのサーバーレス関数では実行時間が30秒に制限されるため、大規模サイトの完全クローリングは避けてください
-- メモリ使用量にも制限（1GB）があります
-- クロール深度は最大5に制限されています
-- 同一ドメイン内のページのみクロールします
-
-## 🔄 フロントエンドとの連携
-
-このバックエンドAPIは対応するフロントエンドアプリケーションと連携します。フロントエンドのセットアップについては、フロントエンドリポジトリのREADMEを参照してください。
+| エンドポイント | メソッド | 説明 |
+|----------------|--------|------|
+| `/` | GET | APIの概要情報 |
+| `/api/convert/` | POST | 変換処理を開始する |
+| `/api/tasks/{task_id}/` | GET | タスクのステータスを取得する |
+| `/api/tasks/{task_id}/result/` | GET | 変換結果を取得する |
 
 ## 🌐 Vercelへのデプロイ
 
-Vercelにデプロイするには、以下の手順に従ってください：
+このバックエンドは[Vercel Serverless Functions](https://vercel.com/docs/serverless-functions/introduction)としてデプロイすることができます:
 
-1. `vercel.json` ファイルをプロジェクトルートに作成:
+1. [Vercel](https://vercel.com) にアクセスしてアカウントを作成します（まだの場合）
+2. 新しいプロジェクトを作成し、GitHubリポジトリと連携します
+3. 必要な環境変数を設定します
+4. デプロイを開始します
 
-```json
-{
-  "version": 2,
-  "builds": [
-    {
-      "src": "api/main.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "api/main.py"
-    }
-  ]
-}
-```
+Vercelのデプロイには以下のファイルが重要です:
+- `vercel.json`: Vercel設定ファイル（環境変数、ルート設定など）
+- `api/requirements.txt`: 必要なPythonパッケージ
 
-2. [Vercel CLI](https://vercel.com/download) をインストール:
+## 🚧 開発ガイドライン
 
-```bash
-npm i -g vercel
-```
+### コード規約
 
-3. デプロイを実行:
+- PEP 8スタイルガイドに従う
+- 型ヒントを使用してコードの可読性を向上
+- 非同期関数を適切に使用
+- 例外処理を丁寧に行う
 
-```bash
-vercel
-```
+### 貢献方法
+
+1. このリポジトリをフォークする
+2. 新しいブランチを作成する (`git checkout -b feature/amazing-feature`)
+3. 変更をコミットする (`git commit -m 'Add some amazing feature'`)
+4. ブランチにプッシュする (`git push origin feature/amazing-feature`)
+5. プルリクエストを作成する
 
 ## 📄 ライセンス
 
@@ -213,7 +145,7 @@ vercel
 
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [MarkItDown](https://github.com/microsoft/markitdown)
-- [Beautiful Soup](https://www.crummy.com/software/BeautifulSoup/)
+- [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/)
 - [HTTPX](https://www.python-httpx.org/)
 
 ---
