@@ -7,3 +7,4 @@ markitdown[all]~=0.1.0a1
 python-multipart
 lxml
 python-dotenv
+python-magic

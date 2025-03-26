@@ -48,6 +48,7 @@ class ConversionMetadata(BaseModel):
     crawl_depth: int
     include_images: bool
     converted_at: str = Field(default_factory=lambda: datetime.now().isoformat())
+    file_type: Optional[str] = None  # ファイル変換時のファイルタイプ
 
 class ConversionResult(BaseModel):
     """変換結果用のモデル"""

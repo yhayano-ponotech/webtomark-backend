@@ -4,6 +4,8 @@ from tempfile import NamedTemporaryFile
 import os
 import asyncio
 from datetime import datetime
+import mimetypes
+from pathlib import Path
 from bs4 import BeautifulSoup
 
 from models import ConversionResult, ConversionMetadata
@@ -99,6 +101,97 @@ class MarkdownConverter:
             )
         
         return result
+    
+    async def convert_file(
+        self,
+        file_path: str,
+        original_filename: str,
+        task_id: Optional[str] = None
+    ) -> ConversionResult:
+        """
+        ファイルをMarkdownに変換する
+        
+        Args:
+            file_path: 変換するファイルのパス
+            original_filename: 元のファイル名
+            task_id: 進捗報告用のタスクID(省略可)
+            
+        Returns:
+            ConversionResult: 変換結果
+        """
+        try:
+            # 進捗状況の更新
+            if task_id:
+                tasks.update_task_progress(
+                    task_id, 
+                    10, 
+                    f"ファイル {original_filename} の変換を開始します"
+                )
+            
+            # ファイルの拡張子を取得
+            file_ext = os.path.splitext(original_filename)[1].lower()
+            
+            # 進捗状況の更新
+            if task_id:
+                tasks.update_task_progress(
+                    task_id, 
+                    30, 
+                    "ファイルを解析中..."
+                )
+            
+            # MarkItDownを使用してファイルをMarkdownに変換
+            conversion_result = self.markitdown.convert(file_path)
+            markdown_content = conversion_result.text_content
+            
+            # 進捗状況の更新
+            if task_id:
+                tasks.update_task_progress(
+                    task_id, 
+                    90, 
+                    "Markdown変換が完了しました"
+                )
+            
+            # ファイル名をタイトルとして使用
+            title = os.path.basename(original_filename)
+            
+            # メタデータの作成
+            metadata = ConversionMetadata(
+                source_url=f"file://{original_filename}",  # ローカルファイルのためURL形式なし
+                title=title,
+                page_count=1,  # ファイルは単一ページとして扱う
+                crawl_depth=0,  # ファイル変換なのでクロール深度は0
+                include_images=True,  # 不使用だが設定
+                converted_at=datetime.now().isoformat()
+            )
+            
+            # 結果の作成
+            result = ConversionResult(
+                task_id=task_id or "",
+                markdown=markdown_content,
+                metadata=metadata
+            )
+            
+            # 進捗状況の更新
+            if task_id:
+                tasks.update_task_progress(
+                    task_id, 
+                    95, 
+                    "結果を生成しました"
+                )
+            
+            # 一時ファイルを削除
+            if os.path.exists(file_path):
+                os.unlink(file_path)
+            
+            return result
+            
+        except Exception as e:
+            # エラー発生時は一時ファイルを削除
+            if os.path.exists(file_path):
+                os.unlink(file_path)
+            
+            # エラーの再スロー
+            raise Exception(f"ファイル変換中にエラーが発生しました: {str(e)}")
     
     async def _convert_pages_to_markdown(self, pages: Dict[str, str]) -> Dict[str, str]:
         """

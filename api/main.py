@@ -1,8 +1,10 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 import uuid
 from typing import Optional, List
 import os
+import tempfile
+import shutil
 
 from models import ConversionRequest, TaskStatus, ConversionResult
 from converter import MarkdownConverter
@@ -54,6 +56,7 @@ def read_root():
         "version": "0.1.0",
         "endpoints": {
             "/api/convert/": "ウェブサイトをMarkdownに変換するリクエストを開始",
+            "/api/convert/file/": "ファイルをMarkdownに変換するリクエストを開始",
             "/api/tasks/{task_id}/": "タスクのステータスを確認",
             "/api/tasks/{task_id}/result/": "変換結果を取得",
         }
@@ -79,6 +82,42 @@ async def start_conversion(
     )
     
     return {"taskId": task_id}
+
+# ファイル変換リクエストを開始するエンドポイント
+@app.post("/api/convert/file/", response_model=dict)
+async def convert_file(
+    file: UploadFile = File(...),
+    task_id: str = Form(...),
+):
+    # ファイルサイズチェック (10MB上限)
+    if file.size and file.size > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="ファイルサイズは10MB以下にしてください")
+    
+    # 一時ファイルの作成
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as temp_file:
+            # アップロードされたファイルを一時ファイルにコピー
+            shutil.copyfileobj(file.file, temp_file)
+            temp_file_path = temp_file.name
+        
+        # ファイルを閉じる
+        await file.close()
+        
+        # バックグラウンドタスクの開始
+        await tasks.start_background_task(
+            task_id,
+            converter.convert_file,
+            temp_file_path,
+            file.filename
+        )
+        
+        return {"taskId": task_id}
+        
+    except Exception as e:
+        # エラー発生時は一時ファイルを削除
+        if 'temp_file_path' in locals() and os.path.exists(temp_file_path):
+            os.unlink(temp_file_path)
+        raise HTTPException(status_code=500, detail=f"ファイル処理中にエラーが発生しました: {str(e)}")
 
 # タスクのステータスを確認するエンドポイント
 @app.get("/api/tasks/{task_id}/", response_model=TaskStatus)
